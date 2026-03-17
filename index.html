@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 提示詞助手 - 快樂學習版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #FFF9E6; 
+            color: #333;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 2rem;
+            border: 4px solid;
+            box-shadow: 0 10px 0 0 rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .prompt-tag {
+            border: 3px solid #eee;
+            transition: all 0.2s;
+            font-size: 1.15rem; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 1rem 0.5rem;
+        }
+
+        .prompt-tag:active {
+            transform: scale(0.9);
+            filter: brightness(0.9);
+        }
+
+        .prompt-item {
+            display: inline-flex;
+            align-items: center;
+            background: #fff;
+            border: 3px solid #333;
+            padding: 8px 16px;
+            margin: 6px;
+            border-radius: 50px;
+            font-weight: 900;
+            box-shadow: 4px 4px 0px #333;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* 顏色分類 */
+        .color-blue { border-color: #3B82F6; color: #1E40AF; }
+        .color-green { border-color: #10B981; color: #065F46; }
+        .color-red { border-color: #EF4444; color: #991B1B; }
+        .color-yellow { border-color: #F59E0B; color: #92400E; }
+        .color-purple { border-color: #8B5CF6; color: #5B21B6; }
+        .color-pink { border-color: #EC4899; color: #9D174D; }
+        .color-cyan { border-color: #06B6D4; color: #164E63; }
+
+        #copy-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <!-- 成功通知 -->
+    <div id="copy-notification" class="hidden bg-yellow-400 text-black px-12 py-8 rounded-full shadow-2xl font-black text-2xl border-8 border-white animate-bounce">
+        🌟 耶！複製成功囉！ 🌟
+    </div>
+
+    <!-- 頂部標題 -->
+    <nav class="p-8 bg-white border-b-8 border-yellow-200 text-center">
+        <h1 class="text-4xl md:text-5xl font-black text-orange-500 tracking-wider">
+            🎨 我的 AI 小畫家助手
+        </h1>
+        <p class="text-gray-500 mt-2 font-bold text-xl">點點看，組合出你的魔法畫片！</p>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6 space-y-12">
+        
+        <!-- 合成台 -->
+        <section class="category-card border-orange-400 p-8">
+            <h3 class="font-black text-2xl text-orange-600 mb-6 flex items-center gap-2">
+                🏠 我的畫畫籃子 (已裝了這些東西)
+            </h3>
+            
+            <div id="prompt-display" class="w-full min-h-[150px] bg-orange-50 rounded-3xl p-6 mb-8 flex flex-wrap gap-2 content-start border-4 border-dashed border-orange-200">
+                <span class="text-orange-300 font-bold text-2xl italic">快點選下面的卡片...</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <button onclick="copyFullPrompt()" class="bg-green-500 hover:bg-green-400 text-white py-6 rounded-full font-black text-3xl transition transform active:scale-95 shadow-[0_10px_0_0_#15803d] flex items-center justify-center gap-4 border-4 border-white">
+                    <i class="fas fa-magic"></i> 幫我複製咒語
+                </button>
+                <button onclick="clearPrompt()" class="bg-gray-400 hover:bg-gray-300 text-white py-6 rounded-full font-black text-2xl transition shadow-[0_10px_0_0_#4b5563] border-4 border-white">
+                    全部重來
+                </button>
+            </div>
+        </section>
+
+        <!-- 選擇區塊 -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- 主題：動物與人物 -->
+            <div class="category-card border-blue-400 p-6 color-blue">
+                <h4 class="font-black text-2xl mb-6 flex items-center gap-2">
+                    🦁 我要畫什麼？
+                </h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="prompt-tag bg-blue-50 hover:bg-blue-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('大貓咪', 'A giant fluffy cat')">🐱 大貓咪</button>
+                    <button class="prompt-tag bg-blue-50 hover:bg-blue-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('恐龍', 'A cute dinosaur')">🦖 恐龍</button>
+                    <button class="prompt-tag bg-blue-50 hover:bg-blue-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('兔子', 'A cute white bunny')">🐰 小兔子</button>
+                    <button class="prompt-tag bg-blue-50 hover:bg-blue-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('超級英雄', 'A little superhero')">🦸 超級英雄</button>
+                    <button class="prompt-tag bg-blue-50 hover:bg-blue-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('大象', 'A friendly elephant')">🐘 大象</button>
+                    <button class="prompt-tag bg-blue-50 hover:bg-blue-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('企鵝', 'A happy penguin')">🐧 企鵝</button>
+                </div>
+            </div>
+
+            <!-- 主題：交通工具 -->
+            <div class="category-card border-cyan-400 p-6 color-cyan">
+                <h4 class="font-black text-2xl mb-6 flex items-center gap-2">
+                    🚑 交通工具
+                </h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="prompt-tag bg-cyan-50 hover:bg-cyan-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('太空船', 'A colorful spaceship')">🚀 太空船</button>
+                    <button class="prompt-tag bg-cyan-50 hover:bg-cyan-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('警車', 'A cool police car')">🚓 警車</button>
+                    <button class="prompt-tag bg-cyan-50 hover:bg-cyan-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('消防車', 'A big fire truck')">🚒 消防車</button>
+                    <button class="prompt-tag bg-cyan-50 hover:bg-cyan-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('飛機', 'A happy airplane')">✈️ 飛機</button>
+                </div>
+            </div>
+
+            <!-- 動作 -->
+            <div class="category-card border-green-400 p-6 color-green">
+                <h4 class="font-black text-2xl mb-6 flex items-center gap-2">
+                    🌈 他在做什麼？
+                </h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="prompt-tag bg-green-50 hover:bg-green-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('吃東西', 'Eating yummy food')">🍎 吃東西</button>
+                    <button class="prompt-tag bg-green-50 hover:bg-green-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('在微笑', 'Big happy smile')">😊 在微笑</button>
+                    <button class="prompt-tag bg-green-50 hover:bg-green-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('在跳舞', 'Dancing happily')">💃 在跳舞</button>
+                    <button class="prompt-tag bg-green-50 hover:bg-green-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('在睡覺', 'Sleeping peacefully')">💤 在睡覺</button>
+                    <button class="prompt-tag bg-green-50 hover:bg-green-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('看書', 'Reading a book')">📖 看書</button>
+                    <button class="prompt-tag bg-green-50 hover:bg-green-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('跑步', 'Running fast')">🏃 跑步</button>
+                </div>
+            </div>
+
+            <!-- 背景/地點 -->
+            <div class="category-card border-yellow-400 p-6 color-yellow">
+                <h4 class="font-black text-2xl mb-6 flex items-center gap-2">
+                    🌍 在哪裡畫？
+                </h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="prompt-tag bg-yellow-50 hover:bg-yellow-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('在森林裡', 'In a green forest')">🌳 森林裡</button>
+                    <button class="prompt-tag bg-yellow-50 hover:bg-yellow-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('在太空', 'In outer space')">🌌 太空中</button>
+                    <button class="prompt-tag bg-yellow-50 hover:bg-yellow-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('海底', 'Under the blue sea')">🌊 海底世界</button>
+                    <button class="prompt-tag bg-yellow-50 hover:bg-yellow-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('糖果屋', 'In a candy house')">🍭 糖果屋</button>
+                    <button class="prompt-tag bg-yellow-50 hover:bg-yellow-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('草地上', 'On green grass')">🌱 草地上</button>
+                    <button class="prompt-tag bg-yellow-50 hover:bg-yellow-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('海邊', 'On the beach')">🏖️ 海邊</button>
+                </div>
+            </div>
+
+            <!-- 天氣與裝飾 -->
+            <div class="category-card border-pink-400 p-6 color-pink">
+                <h4 class="font-black text-2xl mb-6 flex items-center gap-2">
+                    ✨ 加點小東西
+                </h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="prompt-tag bg-pink-50 hover:bg-pink-100 p-4 rounded-2xl font-bold" onclick="addToPrompt('大太陽', 'Bright happy sun')">☀️ 大太陽</button>
+                    <button class="prompt-tag bg-pink-50 hover:bg-pink-100 p-4 rounded-2xl font-bold" onclick="addToPrompt('亮晶晶', 'Sparkling stars')">✨ 亮晶晶</button>
+                    <button class="prompt-tag bg-pink-50 hover:bg-pink-100 p-4 rounded-2xl font-bold" onclick="addToPrompt('彩虹', 'A big rainbow')">🌈 有彩虹</button>
+                    <button class="prompt-tag bg-pink-50 hover:bg-pink-100 p-4 rounded-2xl font-bold" onclick="addToPrompt('愛心', 'Many floating hearts')">❤️ 愛心</button>
+                    <button class="prompt-tag bg-pink-50 hover:bg-pink-100 p-4 rounded-2xl font-bold" onclick="addToPrompt('氣球', 'Colorful balloons')">🎈 氣球</button>
+                    <button class="prompt-tag bg-pink-50 hover:bg-pink-100 p-4 rounded-2xl font-bold" onclick="addToPrompt('下雪', 'Falling snow')">❄️ 下雪了</button>
+                </div>
+            </div>
+
+            <!-- 風格 -->
+            <div class="category-card border-purple-400 p-6 color-purple">
+                <h4 class="font-black text-2xl mb-6 flex items-center gap-2">
+                    🖌️ 用什麼畫？
+                </h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="prompt-tag bg-purple-50 hover:bg-purple-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('蠟筆畫', 'Crayon drawing style')">🖍️ 蠟筆畫</button>
+                    <button class="prompt-tag bg-purple-50 hover:bg-purple-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('樂高', 'Lego style')">🧱 樂高風</button>
+                    <button class="prompt-tag bg-purple-50 hover:bg-purple-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('黏土', 'Claymation style')">🧸 黏土人</button>
+                    <button class="prompt-tag bg-purple-50 hover:bg-purple-200 p-4 rounded-2xl font-bold" onclick="addToPrompt('粉彩色', 'Soft pastel colors')">🍬 糖果色</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 範例區 -->
+        <section class="text-center space-y-6">
+            <h3 class="text-3xl font-black text-orange-600">這裡有厲害的魔法組合！</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <button onclick="copyExample('ex1')" class="category-card border-blue-300 p-6 text-left group">
+                    <p class="font-bold text-blue-600 mb-2">🎈 恐龍派對</p>
+                    <div id="ex1" class="text-gray-400 text-sm italic">A cute dinosaur wearing a party hat, dancing under a rainbow, crayon drawing style.</div>
+                </button>
+                <button onclick="copyExample('ex2')" class="category-card border-pink-300 p-6 text-left group">
+                    <p class="font-bold text-pink-600 mb-2">🍭 甜甜屋裡的貓</p>
+                    <div id="ex2" class="text-gray-400 text-sm italic">A fluffy cat in a candy house, eating a giant strawberry, very colorful sticker style.</div>
+                </button>
+                <button onclick="copyExample('ex3')" class="category-card border-cyan-300 p-6 text-left group">
+                    <p class="font-bold text-cyan-600 mb-2">🚀 太空小英雄</p>
+                    <div id="ex3" class="text-gray-400 text-sm italic">A little superhero in a spaceship, flying in the dark space with many stars, Lego style.</div>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-10 text-gray-400 font-bold">
+        <p>大家都是小小大藝術家！加油！ 🌈</p>
+    </footer>
+
+    <script>
+        const promptDisplay = document.getElementById('prompt-display');
+        const notification = document.getElementById('copy-notification');
+        let selectedPrompts = [];
+
+        function addToPrompt(zh, en) {
+            if (selectedPrompts.length === 0) {
+                promptDisplay.innerHTML = '';
+            }
+            if (selectedPrompts.some(item => item.en === en)) return;
+            selectedPrompts.push({ zh, en });
+            renderPrompts();
+        }
+
+        function renderPrompts() {
+            if (selectedPrompts.length === 0) {
+                promptDisplay.innerHTML = '<span class="text-orange-300 font-bold text-2xl italic">快點選下面的卡片...</span>';
+                return;
+            }
+
+            promptDisplay.innerHTML = selectedPrompts.map((item, index) => `
+                <div class="prompt-item">
+                    <span class="text-gray-800 mr-2">${item.zh}</span>
+                    <button onclick="removeItem(${index})" class="text-red-500 hover:text-red-700">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                </div>
+            `).join('');
+            
+            promptDisplay.scrollTop = promptDisplay.scrollHeight;
+        }
+
+        function removeItem(index) {
+            selectedPrompts.splice(index, 1);
+            renderPrompts();
+        }
+
+        function clearPrompt() {
+            selectedPrompts = [];
+            renderPrompts();
+        }
+
+        function copyFullPrompt() {
+            if (selectedPrompts.length === 0) return;
+            const englishText = selectedPrompts.map(item => item.en).join(', ');
+            copyTextToClipboard(englishText);
+        }
+
+        function copyExample(id) {
+            const text = document.getElementById(id).innerText;
+            copyTextToClipboard(text);
+        }
+
+        function showNotification() {
+            notification.classList.remove('hidden');
+            setTimeout(() => { notification.classList.add('hidden'); }, 3000);
+        }
+
+        function copyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showNotification();
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
+    </script>
+</body>
+</html>
